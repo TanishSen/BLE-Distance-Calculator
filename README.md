@@ -74,7 +74,7 @@ Feel free to fork the repository and submit a pull request to improve this tool 
 
 ## 👨‍💻 Author
 
-Built with ❤️ by [Your Name](https://github.com/your-username)
+Built with ❤️ by [Tanish Sen](https://github.com/TanishSen)
 ```
 
 Let me know if you'd like a custom banner or screenshot preview section added!
