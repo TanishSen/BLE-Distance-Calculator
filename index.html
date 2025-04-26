@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BLE Distance Calculator</title>
+    <style>
+      :root {
+        --orange-primary: #ff7e36;
+        --orange-light: #ffece2;
+        --white: #ffffff;
+        --light-gray: #f5f5f5;
+        --dark-text: #333333;
+        --shadow: rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      }
+
+      body {
+        background-color: var(--white);
+        color: var(--dark-text);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      header {
+        width: 100%;
+        padding: 20px;
+        background-color: var(--orange-primary);
+        color: var(--white);
+        text-align: center;
+        box-shadow: 0 2px 10px var(--shadow);
+      }
+
+      .container {
+        width: 90%;
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 24px;
+        background-color: var(--white);
+        border-radius: 16px;
+        box-shadow: 0 4px 20px var(--shadow);
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+
+      h2 {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: var(--orange-primary);
+        margin: 16px 0 8px 0;
+      }
+
+      .input-group {
+        margin-bottom: 16px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid var(--light-gray);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+      }
+
+      input[type="number"]:focus {
+        outline: none;
+        border-color: var(--orange-primary);
+        box-shadow: 0 0 0 2px var(--orange-light);
+      }
+
+      button {
+        width: 100%;
+        padding: 14px;
+        margin-top: 8px;
+        background-color: var(--orange-primary);
+        color: var(--white);
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #f06824;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 126, 54, 0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .result {
+        margin-top: 24px;
+        padding: 16px;
+        background-color: var(--orange-light);
+        border-radius: 8px;
+        text-align: center;
+        display: none;
+      }
+
+      .result.visible {
+        display: block;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+
+      .distance-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--orange-primary);
+        margin: 8px 0;
+      }
+
+      .formula {
+        margin-top: 24px;
+        padding: 16px;
+        background-color: var(--light-gray);
+        border-radius: 8px;
+        font-size: 0.9rem;
+      }
+
+      .formula-text {
+        font-family: monospace;
+        margin: 8px 0;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>BLE Distance Calculator</h1>
+    </header>
+
+    <div class="container">
+      <h2>Input Parameters</h2>
+
+      <div class="input-group">
+        <label for="txPower">Transmitted Power (P) in dBm</label>
+        <input type="number" id="txPower" value="-59" placeholder="e.g. -59" />
+      </div>
+
+      <div class="input-group">
+        <label for="rssi">Measured RSSI Value (S) in dBm</label>
+        <input type="number" id="rssi" value="-75" placeholder="e.g. -75" />
+      </div>
+
+      <div class="input-group">
+        <label for="envFactor">Environmental Factor (N)</label>
+        <input
+          type="number"
+          id="envFactor"
+          value="2"
+          min="1"
+          max="6"
+          step="0.1"
+          placeholder="e.g. 2"
+        />
+      </div>
+
+      <button id="calculate">Calculate Distance</button>
+
+      <div class="result" id="result">
+        <h2>Estimated Distance</h2>
+        <div class="distance-value" id="distance">--</div>
+        <div>meters</div>
+      </div>
+
+      <div class="formula">
+        <h2>Formula Used</h2>
+        <p class="formula-text">d = 10<sup>(P - S) / (10 * N)</sup></p>
+        <p>Where:</p>
+        <ul>
+          <li>d = Estimated distance in meters</li>
+          <li>P = Transmitted power at 1 meter (dBm)</li>
+          <li>S = Measured RSSI value (dBm)</li>
+          <li>N = Environmental factor</li>
+        </ul>
+      </div>
+    </div>
+
+    <script>
+      document
+        .getElementById("calculate")
+        .addEventListener("click", calculateDistance);
+
+      // Also calculate when Enter key is pressed in any input
+      const inputs = document.querySelectorAll("input");
+      inputs.forEach((input) => {
+        input.addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            calculateDistance();
+          }
+        });
+      });
+
+      function calculateDistance() {
+        // Get input values
+        const txPower = parseFloat(document.getElementById("txPower").value);
+        const rssi = parseFloat(document.getElementById("rssi").value);
+        const envFactor = parseFloat(
+          document.getElementById("envFactor").value
+        );
+
+        // Validate inputs
+        if (isNaN(txPower) || isNaN(rssi) || isNaN(envFactor)) {
+          alert("Please enter valid numbers for all fields");
+          return;
+        }
+
+        if (envFactor <= 0) {
+          alert("Environmental factor must be greater than 0");
+          return;
+        }
+
+        // Calculate distance: d = 10^((P - S) / (10 * N))
+        const exponent = (txPower - rssi) / (10 * envFactor);
+        const distance = Math.pow(10, exponent);
+
+        // Display result with 2 decimal places
+        const resultElement = document.getElementById("result");
+        document.getElementById("distance").textContent = distance.toFixed(2);
+
+        // Show result with animation
+        resultElement.classList.add("visible");
+
+        // Provide haptic feedback if available
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(50);
+        }
+      }
+    </script>
+  </body>
+</html>
